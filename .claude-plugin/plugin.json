@@ -9,6 +9,6 @@
   },
   "homepage": "https://datalabs.store",
   "repository": "https://github.com/vvinogradoff/AIContextBridgeForHubspot",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "keywords": ["hubspot", "crm", "analytics", "sql", "mcp", "revenue-ops", "sales", "marketing"]
 }

@@ -42,4 +42,4 @@ All queries are **read-only, enforced by the database itself** — INSERT/UPDATE
 
 ## License
 
-Apache-2.0 — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
