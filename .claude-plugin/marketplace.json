@@ -1,11 +1,11 @@
 {
   "name": "datalabs-revenue-analytics",
   "owner": {
-    "name": "DataLabs",
+    "name": "DataLabs.store",
     "email": "support@datalabs.store",
     "url": "https://datalabs.store"
   },
-  "description": "DataLabs plugins for Claude Code - MCP-connected analytics over your business data.",
+  "description": "DataLabs.store plugins for Claude Code - MCP-connected analytics over your business data.",
   "plugins": [
     {
       "name": "revenue-analytics-for-hubspot",

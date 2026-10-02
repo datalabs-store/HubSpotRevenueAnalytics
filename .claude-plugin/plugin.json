@@ -5,7 +5,7 @@
   "description": "Connects Claude to a real SQL Server mirror of your HubSpot portal (deals, pipeline, contacts, engagements, email, workflows) and teaches Claude the schema, SQL Server dialect gotchas, and proven analytics recipes for it - so you get joins, CTEs, and window functions HubSpot's standard reporting system has no path for.",
   "version": "1.0.0",
   "author": {
-    "name": "DataLabs",
+    "name": "DataLabs.store",
     "url": "https://datalabs.store"
   },
   "homepage": "https://datalabs.store",
