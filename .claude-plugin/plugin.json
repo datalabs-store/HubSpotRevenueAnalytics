@@ -6,10 +6,12 @@
   "version": "1.0.0",
   "author": {
     "name": "DataLabs.store",
+    "email": "support@datalabs.store",
     "url": "https://datalabs.store"
   },
   "homepage": "https://datalabs.store",
   "repository": "https://github.com/datalabs-store/HubSpotRevenueAnalytics",
+  "supportUrl": "https://datalabs.store/contactus",
   "privacyPolicyUrl": "https://datalabs.store/privacy-notice",
   "termsOfServiceUrl": "https://datalabs.store/conditions-of-use",
   "license": "MIT",
