@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "hubspot-analytics": {
+    "revenue-analytics": {
       "type": "http",
       "url": "https://mcp.datalabs.store/mcp"
     }

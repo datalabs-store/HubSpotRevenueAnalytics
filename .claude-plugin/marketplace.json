@@ -1,14 +1,14 @@
 {
-  "name": "datalabs-hubspot",
+  "name": "datalabs-revenue-analytics",
   "owner": {
     "name": "DataLabs",
     "email": "support@datalabs.store",
     "url": "https://datalabs.store"
   },
-  "description": "DataLabs plugins for Claude Code — MCP-connected analytics over your business data.",
+  "description": "DataLabs plugins for Claude Code - MCP-connected analytics over your business data.",
   "plugins": [
     {
-      "name": "ai-context-bridge-for-hubspot",
+      "name": "revenue-analytics-for-hubspot",
       "source": "./",
       "description": "Connects Claude to a real SQL Server mirror of your HubSpot portal and teaches it the schema, dialect gotchas, and proven analytics recipes to query it well.",
       "category": "data-analytics"

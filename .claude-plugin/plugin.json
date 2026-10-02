@@ -1,14 +1,14 @@
 {
-  "name": "ai-context-bridge-for-hubspot",
-  "displayName": "AI Context Bridge for HubSpot",
-  "description": "Connects Claude to a real SQL Server mirror of your HubSpot portal (deals, pipeline, contacts, engagements, email, workflows) and teaches Claude the schema, SQL Server dialect gotchas, and proven analytics recipes for it — so you get joins, CTEs, and window functions HubSpot's own report builder can't do.",
+  "name": "revenue-analytics-for-hubspot",
+  "displayName": "Revenue Analytics for HubSpot",
+  "description": "Connects Claude to a real SQL Server mirror of your HubSpot portal (deals, pipeline, contacts, engagements, email, workflows) and teaches Claude the schema, SQL Server dialect gotchas, and proven analytics recipes for it - so you get joins, CTEs, and window functions HubSpot's standard reporting system has no path for.",
   "version": "1.0.0",
   "author": {
     "name": "DataLabs",
     "url": "https://datalabs.store"
   },
   "homepage": "https://datalabs.store",
-  "repository": "https://github.com/vvinogradoff/AIContextBridgeForHubspot",
+  "repository": "https://github.com/datalabs-store/HubSpotRevenueAnalytics",
   "license": "MIT",
   "keywords": ["hubspot", "crm", "analytics", "sql", "mcp", "revenue-ops", "sales", "marketing"]
 }

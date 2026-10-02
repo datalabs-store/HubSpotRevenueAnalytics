@@ -1,6 +1,6 @@
 # Analytics Playbook
 
-These are proven analysis patterns — validated live against real synced HubSpot data (see `Docs/marketing-showcases.md` in the DataLabs repo for the full write-ups, including verbatim errors captured from HubSpot's own native MCP attempting the same questions). Each is triggered by a recognizable class of question, needs a specific join/CTE/window-function shape HubSpot's own query surface refuses, and comes with the honesty caveats to carry into your answer. Treat the SQL below as a **template to adapt** to this portal's actual column/table names (confirm via the schema-discovery tools first, per `schema-reference.md`) — not as literal copy-paste.
+These are proven analysis patterns - validated live against real synced HubSpot data (see `Docs/marketing/marketing-showcases.md` in the DataLabs repo for the full write-ups, including the specific reporting-system limit each one falls outside of). Each is triggered by a recognizable class of question, needs a specific join/CTE/window-function shape HubSpot's standard reporting system - single-object reports, a 2-object cap on native cross-object dot notation, no subqueries/UNION/DISTINCT, true multi-object custom reporting gated to Enterprise-tier Data Hub - has no path for, and comes with the honesty caveats to carry into your answer. Never cite a live Breeze (or other native-AI) chat response as evidence of this: HubSpot has tuned Breeze to never refuse, so asked something it can't natively join it attempts an approximation instead, silently, with no disclosure - a claim about "what Breeze says" is unstable across releases and was never a refusal in the first place. The stable, non-evolving proof point is the reporting system's own documented, tier-gated structure, not a chat transcript. Treat the SQL below as a **template to adapt** to this portal's actual column/table names (confirm via the schema-discovery tools first, per `schema-reference.md`) - not as literal copy-paste.
 
 For every recipe: after producing a good answer, offer to `save_query` it if the customer is likely to ask again (weekly leaderboard, monthly forecast check, etc.).
 
@@ -12,7 +12,7 @@ For every recipe: after producing a good answer, offer to `save_query` it if the
 
 **Why raw pipeline misleads:** ranking by raw open deal value ignores how likely those deals actually are to close. A rep with a small number of high-probability deals can carry more real expected revenue than a rep with a large pile of long-shot deals.
 
-**Shape:** CTE joining `Deal → PipelineDeal` (for stage `Probability`) `→ Owner` (for name), computing both raw open value and probability-weighted value plus historical win rate, then ranking by each independently.
+**Shape:** CTE joining `Deal -> PipelineDeal` (for stage `Probability`) `-> Owner` (for name), computing both raw open value and probability-weighted value plus historical win rate, then ranking by each independently.
 
 ```sql
 WITH base AS (
@@ -35,9 +35,9 @@ SELECT owner,
 FROM base GROUP BY owner ORDER BY open_value DESC;
 ```
 
-**Present it as:** two rankings side by side (raw vs. weighted) — the rank-swap between them is the finding, not either number alone.
+**Present it as:** two rankings side by side (raw vs. weighted) - the rank-swap between them is the finding, not either number alone.
 
-**Why HubSpot can't:** requires joining `Deal` to its stage-probability definition and (separately) to owner records — both JOINs, which HubSpot's report builder and native MCP reject outright.
+**Why HubSpot can't:** requires joining `Deal` to its stage-probability definition and (separately) to owner records - both JOINs, which HubSpot's report builder and native MCP reject outright.
 
 ---
 
@@ -45,7 +45,7 @@ FROM base GROUP BY owner ORDER BY open_value DESC;
 
 **Triggered by:** "is our forecast accurate", "check our stage probabilities", "forecast vs. reality"
 
-**Why it matters:** every deal in a stage is weighted by the stage's *configured* probability in forecast rollups — but if the configured number doesn't match the stage's real historical win rate, the whole forecast is systematically biased, in a direction that's invisible unless someone checks.
+**Why it matters:** every deal in a stage is weighted by the stage's *configured* probability in forecast rollups - but if the configured number doesn't match the stage's real historical win rate, the whole forecast is systematically biased, in a direction that's invisible unless someone checks.
 
 **Shape:** aggregate the stage-transition history (`Deal_Stage`) by stage, compute actual win rate, compare to `PipelineDeal.Probability`. Requires a CTE (to aggregate entries before joining to definitions) and a minimum-sample floor (`HAVING`) to avoid noisy small-N stages.
 
@@ -68,7 +68,7 @@ WHERE p.IsClosed = 0 AND a.deals_entered >= 25
 ORDER BY p.PipelineLabel, p.DisplayOrder;
 ```
 
-**Present it as:** a table (or grey-vs-actual bar chart) of configured vs. actual per stage. Flag any stage with a large gap, and especially any stage whose actual win rate is near zero despite a nonzero configured probability — that's dead pipeline inflating the forecast.
+**Present it as:** a table (or grey-vs-actual bar chart) of configured vs. actual per stage. Flag any stage with a large gap, and especially any stage whose actual win rate is near zero despite a nonzero configured probability - that's dead pipeline inflating the forecast.
 
 **Why HubSpot can't:** `Deal_Stage` (the stage-history table) isn't a first-class object HubSpot's MCP exposes; the aggregation needs a CTE; the sample-size floor needs `HAVING`. All three are refused.
 
@@ -78,7 +78,7 @@ ORDER BY p.PipelineLabel, p.DisplayOrder;
 
 **Triggered by:** "what deals are stuck", "pipeline hygiene", "aging deals", "what's been sitting too long"
 
-**Why it matters:** HubSpot only computes time-in-stage after a deal moves or closes — for *open* deals sitting untouched, there's no native alert or report. This query is the only way to surface a silently-aging backlog.
+**Why it matters:** Pro/Enterprise portals now ship default `Time in current stage`/`Date entered current stage` properties, so "which deals are oldest in their stage" is a plain native filter today - lead with that if the customer just wants a single-stage list. What stays non-native is the **cross-stage rollup**: total value stuck past a threshold, broken out by pipeline/stage in one shot. Use this recipe for that aggregate view, not as a "HubSpot can't show you this at all" claim.
 
 **Shape:** join open deals to their current (still-open) stage-history row (`hs_v2_date_exited IS NULL`), compute days-in-stage, flag value stuck past a threshold (90 days is a reasonable default; ask the customer if they have a different SLA in mind).
 
@@ -98,7 +98,7 @@ HAVING COUNT(*) >= 10
 ORDER BY value_stuck_90d_plus DESC;
 ```
 
-**Why HubSpot can't:** stage-transition timestamps for still-open deals live only in the history table, joined against current deal state — a JOIN HubSpot's engine refuses.
+**Why HubSpot's reporting system can't (the aggregate, not the single-stage list):** rolling up value-stuck-past-threshold across every pipeline/stage in one query needs the stage-history table joined to current deal state and grouped with a `HAVING` floor - single-object standard reports have no path for that join, and even the Enterprise-tier custom report builder has no equivalent of this cross-stage aggregate.
 
 ---
 
@@ -106,9 +106,9 @@ ORDER BY value_stuck_90d_plus DESC;
 
 **Triggered by:** "does more activity help close deals", "engagement vs win rate", "are reps over-engaging"
 
-**Why it matters:** the intuitive assumption ("more touches = more likely to close") is often wrong, and the relationship is frequently **non-monotonic** — a middle band of heavily-worked deals can convert *worse* than both lightly-touched and very-heavily-touched deals. That's a coaching-relevant finding, not just a data point.
+**Why it matters:** the intuitive assumption ("more touches = more likely to close") is often wrong, and the relationship is frequently **non-monotonic** - a middle band of heavily-worked deals can convert *worse* than both lightly-touched and very-heavily-touched deals. That's a coaching-relevant finding, not just a data point.
 
-**Shape:** count engagements per deal via the bridge table, bucket deals by engagement count, compare win rate and average deal size per bucket. Exclude the zero-engagement bucket explicitly if it's dominated by bulk-imported/legacy records with no logged activity — check with `get_data_statistics` first and say so if you exclude it.
+**Shape:** count engagements per deal via the bridge table, bucket deals by engagement count, compare win rate and average deal size per bucket. Exclude the zero-engagement bucket explicitly if it's dominated by bulk-imported/legacy records with no logged activity - check with `get_data_statistics` first and say so if you exclude it.
 
 ```sql
 WITH de AS (
@@ -139,7 +139,7 @@ GROUP BY CASE WHEN eng_count BETWEEN 1 AND 5   THEN '1-5 touches'
 ORDER BY MIN(eng_count);
 ```
 
-**Why HubSpot can't:** `Engagement` is a separate object reached only through a bridge table — two JOINs, and HubSpot's dot-notation cross-object syntax caps at 2 associated object types with no aggregation across that dimension anyway.
+**Why HubSpot can't:** `Engagement` is a separate object reached only through a bridge table - two JOINs, and HubSpot's dot-notation cross-object syntax caps at 2 associated object types with no aggregation across that dimension anyway.
 
 ---
 
@@ -147,7 +147,7 @@ ORDER BY MIN(eng_count);
 
 **Triggered by:** "logo count vs revenue", "customer segments", "where's our ARR concentrated"
 
-**Why it matters:** a logo-count view and a revenue view of the same customer base often tell opposite stories — investment decisions made off logo counts can be pointed at the wrong segment entirely.
+**Why it matters:** a logo-count view and a revenue view of the same customer base often tell opposite stories - investment decisions made off logo counts can be pointed at the wrong segment entirely.
 
 **Shape:** bucket companies by size (employee count or another firmographic proxy), compute each bucket's share of both logo count and total ARR using window functions (`SUM(...) OVER()`), so percentages compute in the same pass as the aggregation.
 
@@ -177,7 +177,7 @@ FROM seg GROUP BY size_band ORDER BY size_band;
 
 **Triggered by:** "which campaigns drive deals", "email attribution", "does opening an email more predict faster conversion"
 
-**Why it matters:** raw reach (opens/clicks) and true downstream conversion routinely rank in **opposite order** — the highest-reach mass sends can convert far worse than small, targeted ones. This requires the full engaged population as the denominator and each contact's entire deal history to establish "first-ever deal," so it can't be narrowed to a sample or split into separately-joined pieces (see caveats below).
+**Why it matters:** raw reach (opens/clicks) and true downstream conversion routinely rank in **opposite order** - the highest-reach mass sends can convert far worse than small, targeted ones. This requires the full engaged population as the denominator and each contact's entire deal history to establish "first-ever deal," so it can't be narrowed to a sample or split into separately-joined pieces (see caveats below).
 
 **Shape:** first engagement + open-count per (send, contact) from `EmailCampaignEvent`, each contact's first-ever deal date via the association bridge, then a 1:1 match within a conversion window (90 days is a reasonable default).
 
@@ -213,14 +213,14 @@ GROUP BY ec.Name HAVING COUNT(*) >= 25 ORDER BY conversion_pct DESC;
 ```
 
 **Honesty notes to carry into the answer:**
-- This is association, not causation — a prospect who engaged then created a deal may have already been warming up for other reasons.
-- Low absolute conversion counts are normal (a handful of "became opportunities" out of dozens-to-thousands engaged) — don't over-read small differences between adjacent rows in the ranking; the real signal is a large gap (5-20x) between clusters, not precise ordering.
-- Don't assume repeat opens predict faster conversion without checking — in at least one validated run this hypothesis did **not** hold (conversion was flat across open-count buckets). Report what the query actually shows, not the intuitive hypothesis.
+- This is association, not causation - a prospect who engaged then created a deal may have already been warming up for other reasons.
+- Low absolute conversion counts are normal (a handful of "became opportunities" out of dozens-to-thousands engaged) - don't over-read small differences between adjacent rows in the ranking; the real signal is a large gap (5-20x) between clusters, not precise ordering.
+- Don't assume repeat opens predict faster conversion without checking - in at least one validated run this hypothesis did **not** hold (conversion was flat across open-count buckets). Report what the query actually shows, not the intuitive hypothesis.
 
-**Why HubSpot can't:** needs `EmailCampaignEvent → Contact → ContactDeals → Deal` (three joins), a CTE to establish each contact's first-ever deal, a date-difference, and a `HAVING` floor — plus `EmailCampaignEvent` is too large to pull client-side and hand-join.
+**Why HubSpot can't:** needs `EmailCampaignEvent -> Contact -> ContactDeals -> Deal` (three joins), a CTE to establish each contact's first-ever deal, a date-difference, and a `HAVING` floor - plus `EmailCampaignEvent` is too large to pull client-side and hand-join.
 
 ---
 
 ## Not yet buildable on every portal
 
-Discount-vs-outcome (line-item discount % vs. deal win rate and subsequent tenure) and cohorted NRR (subscription cohorts by acquisition date/segment) are architecturally supported by the schema but need populated `LineItem`/`Subscription`/`Payment`/`Discount` data. Check `get_data_statistics` on those tables before attempting either — if they're empty or near-empty, say so rather than presenting a technically-valid-but-meaningless result.
+Discount-vs-outcome (line-item discount % vs. deal win rate and subsequent tenure) and cohorted NRR (subscription cohorts by acquisition date/segment) are architecturally supported by the schema but need populated `LineItem`/`Subscription`/`Payment`/`Discount` data. Check `get_data_statistics` on those tables before attempting either - if they're empty or near-empty, say so rather than presenting a technically-valid-but-meaningless result.
