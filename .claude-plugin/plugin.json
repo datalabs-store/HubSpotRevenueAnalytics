@@ -11,6 +11,7 @@
   "homepage": "https://datalabs.store",
   "repository": "https://github.com/datalabs-store/HubSpotRevenueAnalytics",
   "privacyPolicyUrl": "https://datalabs.store/privacy-notice",
+  "termsOfServiceUrl": "https://datalabs.store/conditions-of-use",
   "license": "MIT",
   "keywords": ["hubspot", "crm", "analytics", "sql", "mcp", "revenue-ops", "sales", "marketing"]
 }
